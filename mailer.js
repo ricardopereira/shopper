@@ -8,7 +8,7 @@ module.exports = function(secrets) {
     function sendProducts(config, input) {
 		var message = 'Promoções\n\n'
 		for (item of input.products) {
-			message += item.title+'\n'+item.brand+'\n'+item.info+'\n'+item.price+'\n'+item.link+'\n\n'
+			message += item.title+'\n'+item.brand+'\n'+item.info+'\n'+item.price+'€\n'+item.link+'\n\n'
 		}
 		message += '\nImplemented by Ricardo Pereira'
 

@@ -11,20 +11,46 @@ var schema = { 'title': 'div.title',
 	'link': 'div.title @href'
 }
 
+function scrapProduct(keyword, add, done) {
+	osmosis
+	.get('http://www.continente.pt/pt-pt/public/Pages/searchresults.aspx?k='+keyword.value+'#/?pl=80')
+	.find('div.productItem')
+	.set(schema)
+	.data(function(data) {
+		var addCurrentItem = false
+		if (data.hasDiscount === 'true') {
+			data.price = parseFloat(data.price)
+			if (keyword.limit) {
+				if (keyword.info) {
+					if (data.info.toLowerCase().indexOf(keyword.info) > -1) {
+						if (keyword.limit > data.price) {
+							addCurrentItem = true
+						}
+					}
+				}
+				else {
+					if (keyword.limit > data.price) {
+						addCurrentItem = true
+					}
+				}
+			}
+			else {
+				addCurrentItem = true
+			}
+		}
+
+		if (addCurrentItem) {
+			add(data)			
+		}
+	})
+	.done(function() {
+		done()
+	})
+}
+
 function scrapProducts(keywords, add, done) {
 	for (keyword of keywords) {
-		osmosis
-		.get('http://www.continente.pt/pt-pt/public/Pages/searchresults.aspx?k='+keyword.value+'#/?pl=80')
-		.find('div.productItem')
-		.set(schema)
-		.data(function(data) {
-			if (data.hasDiscount === 'true') {
-				add(data)
-			}
-		})
-		.done(function() {
-			done()
-		})
+		scrapProduct(keyword, add, done)
 	}
 }
 
@@ -43,7 +69,7 @@ if (argc >= 3) {
 	})
 }
 
-exports.getProducts = function(keywords, completion) {
+exports.getProductsByKeywords = function(keywords, completion) {
 	var items = []
 	var count = keywords.length
 	scrapProducts(keywords, function(item) {
@@ -54,6 +80,10 @@ exports.getProducts = function(keywords, completion) {
 			completion({ title: 'Continente - preços baixos', products: items })			
 		}
 	})	
+}
+
+exports.getProductsByLinks = function(links, completion) {
+	completion({ title: 'Continente - artigos em conta', products: [] })
 }
 
 exports.getPromotions = scrapPromotions
