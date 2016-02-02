@@ -7,8 +7,14 @@ var schema = { 'title': 'div.title',
 	'info': 'div.subTitle',
 	'price': 'input.item_listPrice @value',
 	'hasDiscount': 'input.IsInPromotion @value',
-	'discount': 'input.WebDiscountValue @value',
+	'discount': 'input.RetekDiscountValue @value',
+	'discountProcess': 'input.RetekDiscountIcon @value', //LoyaltyStandardIcon, SuperPriceIcon
+	'discountType': 'input.RetekDiscountType @value', //Percentage, Value
 	'link': 'div.title @href'
+}
+
+function stringStartsWith(string, prefix) {
+    return string.slice(0, prefix.length) == prefix
 }
 
 function scrapProduct(keyword, add, done) {
@@ -17,31 +23,39 @@ function scrapProduct(keyword, add, done) {
 	.find('div.productItem')
 	.set(schema)
 	.data(function(data) {
-		var addCurrentItem = false
-		if (data.hasDiscount === 'true') {
-			data.price = parseFloat(data.price)
-			if (keyword.limit) {
-				if (keyword.info) {
-					if (data.info.toLowerCase().indexOf(keyword.info) > -1) {
-						if (keyword.limit > data.price) {
-							addCurrentItem = true
-						}
-					}
-				}
-				else {
-					if (keyword.limit > data.price) {
-						addCurrentItem = true
-					}
-				}
-			}
-			else {
-				addCurrentItem = true
-			}
+		data.price = parseFloat(data.price)
+		data.priceFinal = data.price
+		data.discount = parseFloat(data.discount)
+
+		if (data.discountProcess.toLowerCase().lastIndexOf('loyalty', 0) === 0) {
+			data.discountProcess = 'storecard'
+		}
+		else if (data.discountProcess.toLowerCase().lastIndexOf('superprice', 0) === 0) {
+			data.discountProcess = 'superprice'
 		}
 
-		if (addCurrentItem) {
-			add(data)			
+		if (data.discountType.toLowerCase() == 'percentage') {
+			data.priceFinal = data.price - data.price * (data.discount/100)
 		}
+		else if (data.discountType.toLowerCase() == 'value') {
+			data.priceFinal = data.price - data.discount
+		}
+
+		if (data.hasDiscount !== 'true') {
+			return
+		}
+
+		// e.g.: Kg, Pack
+		if (keyword.info && data.info && data.info.toLowerCase().indexOf(keyword.info) < 0) {
+			return
+		}
+
+		// cost 3,45€ > limit 2,19€
+		if (keyword.limit && data.priceFinal > keyword.limit) {
+			return
+		}
+
+		add(data)
 	})
 	.done(function() {
 		done()

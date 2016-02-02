@@ -8,7 +8,16 @@ module.exports = function(secrets) {
     function sendProducts(config, input) {
 		var message = 'Promoções\n\n'
 		for (item of input.products) {
-			message += item.title+'\n'+item.brand+'\n'+item.info+'\n'+item.price+'€\n'+item.link+'\n\n'
+			message += item.title+'\n'+
+			  item.brand+'\n'+
+			  item.info+'\n'+
+			  item.price+'€\n'+
+			  item.link+'\n'
+			  if (item.discount) {
+				  message += item.discount+' - '+item.discountType+' -> '+item.discountProcess.toUpperCase()+'\n'+
+				  	'Final price: '+item.priceFinal+'\n'
+			  }
+			  message += '\n'
 		}
 		message += '\nImplemented by Ricardo Pereira'
 
