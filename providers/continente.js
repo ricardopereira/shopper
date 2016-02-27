@@ -18,8 +18,25 @@ function stringStartsWith(string, prefix) {
 }
 
 function scrapProduct(keyword, add, done) {
+	scrapProductWithLink('http://www.continente.pt/pt-pt/public/Pages/searchresults.aspx?k='+keyword.value+'#/?pl=80'
+		, function(item) {
+			// e.g.: Kg, Pack
+			if (keyword.info && data.info && data.info.toLowerCase().indexOf(keyword.info) < 0) {
+				return
+			}
+
+			// cost 3,45€ > limit 2,19€
+			if (keyword.limit && data.priceFinal > keyword.limit) {
+				return
+			}
+
+			data(item)
+		}, done)
+}
+
+function scrapProductWithLink(link, add, done) {
 	osmosis
-	.get('http://www.continente.pt/pt-pt/public/Pages/searchresults.aspx?k='+keyword.value+'#/?pl=80')
+	.get(link)
 	.find('div.productItem')
 	.set(schema)
 	.data(function(data) {
@@ -45,16 +62,6 @@ function scrapProduct(keyword, add, done) {
 			return
 		}
 
-		// e.g.: Kg, Pack
-		if (keyword.info && data.info && data.info.toLowerCase().indexOf(keyword.info) < 0) {
-			return
-		}
-
-		// cost 3,45€ > limit 2,19€
-		if (keyword.limit && data.priceFinal > keyword.limit) {
-			return
-		}
-
 		add(data)
 	})
 	.done(function() {
@@ -66,10 +73,6 @@ function scrapProducts(keywords, add, done) {
 	for (keyword of keywords) {
 		scrapProduct(keyword, add, done)
 	}
-}
-
-function scrapPromotions(keywords, add, done) {
-	done()
 }
 
 // Command line test: node providers/continente.js gato+esteril
@@ -100,4 +103,12 @@ exports.getProductsByLinks = function(links, completion) {
 	completion({ title: 'Continente - artigos em conta', products: [] })
 }
 
-exports.getPromotions = scrapPromotions
+exports.getPromotions = function(completion) {
+	var items = []
+	scrapProductWithLink('http://www.continente.pt/stores/continente/pt-pt/public/Pages/homepage.aspx'
+		, function(item) { 
+			items.push(item) 
+		}, function() { 
+			completion(items)
+		})
+}

@@ -1,4 +1,4 @@
-var manager = require('./manager.js')
+var manager = require('./filemanager.js')
 
 module.exports = function(secrets) {
     var module = {}

@@ -1,2 +1,2 @@
 #!/bin/bash
-node market.js
+node shopper.js

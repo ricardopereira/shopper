@@ -1,4 +1,4 @@
-var manager = require('./manager.js')
+var fmanager = require('./filemanager.js')
 
 var secrets = manager.getSecrets()
 var mailer = require('./mailer.js')(secrets)
@@ -7,13 +7,13 @@ var mailer = require('./mailer.js')(secrets)
 var providers = ['continente', 'jumbo']
 
 // Keywords
-manager.getRemoteFile(secrets['keywords_url'], function(json) {
+fmanager.getRemoteFile(secrets['keywords_url'], function(json) {
 	var keywords = json
 	checkProductsByKeywords(keywords, providers)
 })
 
 // Links
-manager.getRemoteFile(secrets['links_url'], function(json) {
+fmanager.getRemoteFile(secrets['links_url'], function(json) {
 	var links = json
 	checkProductsByLinks(links, providers)
 })

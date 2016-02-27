@@ -7,11 +7,18 @@
   },
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.3.3",
+    "express": "^4.13.4",
+    "immutable": "^3.7.6",
     "mailgun-js": "^0.7.7",
     "osmosis": "^0.1.0",
     "x-ray": "^2.0.2"
   },
   "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-livereload": "^3.8.1",
+    "gulp-nodemon": "^2.0.6",
+    "gulp-notify": "^2.2.0",
     "jshint": "^2.8.0"
   }
 }

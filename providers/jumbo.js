@@ -2,40 +2,41 @@ var xray = require('x-ray')()
 var argc = process.argv.length
 var args = process.argv.slice(2)
 
-var schema = { title: 'title',
-  items: xray('.infoProduto', [{
-    title: '.titProd',
+var schemaArticle = {
+	title: '.titProd',
     brand: '.titMarca',
 	info: '.gr',
     price: '.preco',
     link: '.titProd@href'
-  }])
 }
 
-var schemaArticle = { title: '.titProd',
-    brand: '.titMarca',
-	info: '.gr',
-    price: '.preco',
-    link: '.titProd@href'
+function schemaList(classname) {
+	return { 
+		items: xray(classname, [schemaArticle]) 
+	}
 }
 
 function scrapProducts(keywords, add, done) {
 	for (keyword of keywords) {
-		xray('http://www.jumbo.pt/Frontoffice/ContentPages/CatalogSearch.aspx?Q='+keyword.value+'&loop=1', schema)(function(err, obj) {
-			for (item of obj.items) {
-				item.title = item.title.replace(/\n/g, "").trim()
-				item.brand = item.brand.replace(/\n/g, "").trim()
-				item.info = item.info.replace(/\n/g, "").trim()
-				item.price = item.price.replace(/€/g, "").trim()
-				item.price = item.price.replace(/,/g, ".").trim()
-				add(item)
-			}
-			done()
-		})		
+		scrapProductsWithLink('.infoProduto', 'http://www.jumbo.pt/Frontoffice/ContentPages/CatalogSearch.aspx?Q='+keyword, add, done)
 	}
 }
 
-function scrapProductLink(link, limit, add, done) {
+function scrapProductsWithLink(classname, link, add, done) {
+	xray(link, schemaList(classname))(function(err, obj) {
+		for (item of obj.items) {
+			item.title = item.title.replace(/\n/g, "").trim()
+			item.brand = item.brand.replace(/\n/g, "").trim()
+			item.info = item.info.replace(/\n/g, "").trim()
+			item.price = item.price.replace(/€/g, "").trim()
+			item.price = item.price.replace(/,/g, ".").trim()
+			add(item)
+		}
+		done()
+	})		
+}
+
+function scrapProductWithLink(link, limit, add, done) {
 	xray(link, schemaArticle)(function(err, item) {
 		item.title = item.title.replace(/\n/g, "").trim()
 		item.brand = item.brand.replace(/\n/g, "").trim()
@@ -53,12 +54,8 @@ function scrapProductLink(link, limit, add, done) {
 
 function scrapProductsFromLinks(links, add, done) {
 	for (item of links) {
-		scrapProductLink(item.link, item.limit, add, done)
+		scrapProductWithLink(item.link, item.limit, add, done)
 	}
-}
-
-function scrapPromotions(keywords, add, done) {
-	done()
 }
 
 // Command line test: node providers/jumbo.js esteril
@@ -90,4 +87,12 @@ exports.getProductsByLinks = function(links, completion) {
 	})	
 }
 
-exports.getPromotions = scrapPromotions
+exports.getPromotions = function(completion) {
+	var items = []
+	scrapProductsWithLink('.prodHp', 'http://www.jumbo.pt/Frontoffice/ContentPages/JumboNetWelcome.aspx'
+		, function(item) { 
+			items.push(item) 
+		}, function() { 
+			completion(items)
+		})
+}
