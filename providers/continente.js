@@ -5,7 +5,7 @@ var args = process.argv.slice(2)
 var schema = { 'title': 'div.title',
 	'brand': 'div.type',
 	'info': 'div.subTitle',
-	'price': 'input.item_listPrice @value',
+	'originalPrice': 'input.item_listPrice @value',
 	'hasDiscount': 'input.IsInPromotion @value',
 	'discount': 'input.RetekDiscountValue @value',
 	'discountProcess': 'input.RetekDiscountIcon @value', //LoyaltyStandardIcon, SuperPriceIcon
@@ -26,7 +26,7 @@ function scrapProduct(keyword, add, done) {
 			}
 
 			// cost 3,45€ > limit 2,19€
-			if (keyword.limit && data.priceFinal > keyword.limit) {
+			if (keyword.limit && data.price > keyword.limit) {
 				return
 			}
 
@@ -40,8 +40,8 @@ function scrapProductWithLink(link, add, done) {
 	.find('div.productItem')
 	.set(schema)
 	.data(function(data) {
-		data.price = parseFloat(data.price)
-		data.priceFinal = data.price
+		data.originalPrice = parseFloat(data.originalPrice)
+		data.price = data.originalPrice
 		data.discount = parseFloat(data.discount)
 
 		if (data.discountProcess.toLowerCase().lastIndexOf('loyalty', 0) === 0) {
@@ -52,11 +52,13 @@ function scrapProductWithLink(link, add, done) {
 		}
 
 		if (data.discountType.toLowerCase() == 'percentage') {
-			data.priceFinal = data.price - data.price * (data.discount/100)
+			data.price = data.originalPrice - data.originalPrice * (data.discount/100)
 		}
 		else if (data.discountType.toLowerCase() == 'value') {
-			data.priceFinal = data.price - data.discount
+			data.price = data.originalPrice - data.discount
 		}
+
+		data.price = data.price.toFixed(2)
 
 		if (data.hasDiscount !== 'true') {
 			return

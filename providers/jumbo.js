@@ -1,3 +1,4 @@
+var Promise = require("bluebird")
 var xray = require('x-ray')()
 var argc = process.argv.length
 var args = process.argv.slice(2)
@@ -22,18 +23,25 @@ function scrapProducts(keywords, add, done) {
 	}
 }
 
-function scrapProductsWithLink(classname, link, add, done) {
-	xray(link, schemaList(classname))(function(err, obj) {
-		for (item of obj.items) {
-			item.title = item.title.replace(/\n/g, "").trim()
-			item.brand = item.brand.replace(/\n/g, "").trim()
-			item.info = item.info.replace(/\n/g, "").trim()
-			item.price = item.price.replace(/€/g, "").trim()
-			item.price = item.price.replace(/,/g, ".").trim()
-			add(item)
-		}
-		done()
-	})		
+function scrapProductsWithLink(classname, link, add) {
+
+	return new Promise(function(resolve, reject) {
+		xray(link, schemaList(classname))(function(err, obj) {
+			for (item of obj.items) {
+				item.title = item.title.replace(/\n/g, "").trim()
+				item.brand = item.brand.replace(/\n/g, "").trim()
+				item.info = item.info.replace(/\n/g, "").trim()
+				item.price = item.price.replace(/€/g, "").trim()
+				item.price = item.price.replace(/,/g, ".").trim()
+				add(item)
+			}
+			if (err) {
+				reject(err);
+			} else {
+				resolve()
+			}
+		})
+	});
 }
 
 function scrapProductWithLink(link, limit, add, done) {
@@ -49,7 +57,7 @@ function scrapProductWithLink(link, limit, add, done) {
 			add(item)
 		}
 		done()
-	})		
+	})
 }
 
 function scrapProductsFromLinks(links, add, done) {
@@ -84,15 +92,16 @@ exports.getProductsByLinks = function(links, completion) {
 		if (count == 0) {
 			completion({ title: 'Jumbo - artigos em conta', products: items })
 		}
-	})	
+	})
 }
 
 exports.getPromotions = function(completion) {
 	var items = []
-	scrapProductsWithLink('.prodHp', 'http://www.jumbo.pt/Frontoffice/ContentPages/JumboNetWelcome.aspx'
-		, function(item) { 
-			items.push(item) 
-		}, function() { 
+	scrapProductsWithLink('.prodHp', 'http://www.jumbo.pt/Frontoffice/ContentPages/JumboNetWelcome.aspx', function(item) { items.push(item) })
+		.then(function() {
+			return scrapProductsWithLink('.prodTema', 'http://www.jumbo.pt/Frontoffice/ContentPages/JumboNetWelcome.aspx', function(item) { items.push(item) })
+		})
+		.then(function(){
 			completion(items)
 		})
 }

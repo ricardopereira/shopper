@@ -15,7 +15,7 @@ module.exports = function(secrets) {
 			  item.link+'\n'
 			  if (item.discount) {
 				  message += item.discount+' - '+item.discountType+' -> '+item.discountProcess.toUpperCase()+'\n'+
-				  	'Final price: '+item.priceFinal+'\n'
+				  	'Original price: '+item.originalPrice+'\n'
 			  }
 			  message += '\n'
 		}

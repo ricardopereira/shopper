@@ -20,5 +20,8 @@
     "gulp-nodemon": "^2.0.6",
     "gulp-notify": "^2.2.0",
     "jshint": "^2.8.0"
+  },
+  "engines": {
+    "node": "5.5.0"
   }
 }
